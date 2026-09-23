@@ -1,0 +1,210 @@
+--// MOBILE FLY
+--// Dùng trong Roblox Studio cho game của bạn
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local character
+local humanoid
+local rootPart
+
+local flying = false
+local flySpeed = 50
+
+local moveX = 0
+local moveZ = 0
+local moveY = 0
+
+local function setupCharacter(char)
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
+	rootPart = char:WaitForChild("HumanoidRootPart")
+end
+
+if player.Character then
+	setupCharacter(player.Character)
+end
+
+player.CharacterAdded:Connect(setupCharacter)
+
+--==================================================
+-- FLY GUI
+--==================================================
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "MobileFly"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local function button(text, pos)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(0,60,0,60)
+	b.Position = pos
+	b.Text = text
+	b.TextSize = 25
+	b.TextColor3 = Color3.new(1,1,1)
+	b.BackgroundColor3 = Color3.fromRGB(45,45,45)
+	b.BackgroundTransparency = 0.15
+	b.Parent = gui
+
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0,12)
+	c.Parent = b
+
+	return b
+end
+
+-- Nút điều khiển
+local up = button("↑",UDim2.new(0,80,1,-180))
+local down = button("↓",UDim2.new(0,80,1,-60))
+
+local left = button("←",UDim2.new(0,15,1,-120))
+local right = button("→",UDim2.new(0,145,1,-120))
+
+local forward = button("▲",UDim2.new(1,-145,1,-180))
+local backward = button("▼",UDim2.new(1,-145,1,-60))
+
+local flyButton = button("FLY",UDim2.new(1,-80,0.5,-30))
+
+--==================================================
+-- NÚT NHẤN / THẢ
+--==================================================
+
+local function hold(button, callback)
+	button.MouseButton1Down:Connect(function()
+		callback(true)
+	end)
+
+	button.MouseButton1Up:Connect(function()
+		callback(false)
+	end)
+
+	button.TouchLongPress:Connect(function(_,state)
+		if state == Enum.UserInputState.Begin then
+			callback(true)
+		elseif state == Enum.UserInputState.End then
+			callback(false)
+		end
+	end)
+end
+
+hold(left,function(on)
+	moveX = on and -1 or 0
+end)
+
+hold(right,function(on)
+	moveX = on and 1 or 0
+end)
+
+hold(forward,function(on)
+	moveZ = on and -1 or 0
+end)
+
+hold(backward,function(on)
+	moveZ = on and 1 or 0
+end)
+
+hold(up,function(on)
+	moveY = on and 1 or 0
+end)
+
+hold(down,function(on)
+	moveY = on and -1 or 0
+end)
+
+--==================================================
+-- BẬT / TẮT FLY
+--==================================================
+
+local function startFly()
+
+	if not character or not humanoid or not rootPart then
+		return
+	end
+
+	flying = true
+	humanoid.PlatformStand = true
+
+	flyButton.Text = "STOP"
+end
+
+local function stopFly()
+
+	flying = false
+
+	moveX = 0
+	moveY = 0
+	moveZ = 0
+
+	if humanoid then
+		humanoid.PlatformStand = false
+	end
+
+	if rootPart then
+		rootPart.AssemblyLinearVelocity = Vector3.zero
+	end
+
+	flyButton.Text = "FLY"
+end
+
+flyButton.MouseButton1Click:Connect(function()
+
+	if flying then
+		stopFly()
+	else
+		startFly()
+	end
+
+end)
+
+--==================================================
+-- BAY
+--==================================================
+
+RunService.RenderStepped:Connect(function()
+
+	if not flying then
+		return
+	end
+
+	if not rootPart or not rootPart.Parent then
+		return
+	end
+
+	local cf = camera.CFrame
+
+	local forwardVector = Vector3.new(
+		cf.LookVector.X,
+		0,
+		cf.LookVector.Z
+	)
+
+	local rightVector = Vector3.new(
+		cf.RightVector.X,
+		0,
+		cf.RightVector.Z
+	)
+
+	if forwardVector.Magnitude > 0 then
+		forwardVector = forwardVector.Unit
+	end
+
+	if rightVector.Magnitude > 0 then
+		rightVector = rightVector.Unit
+	end
+
+	local direction =
+		(forwardVector * moveZ) +
+		(rightVector * moveX) +
+		Vector3.new(0,moveY,0)
+
+	if direction.Magnitude > 0 then
+		direction = direction.Unit
+	end
+
+	rootPart.AssemblyLinearVelocity = direction * flySpeed
+
+end)
