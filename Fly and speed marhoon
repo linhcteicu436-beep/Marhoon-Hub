@@ -1,0 +1,442 @@
+--// MARHOON SPEED AND FLY ❤️✨
+--// Roblox Studio - LocalScript
+--// StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local Speed = 16
+local FlySpeed = 50
+local Flying = false
+
+local Character
+local Humanoid
+local Root
+
+local FlyConnection
+
+local UpPressed = false
+local DownPressed = false
+
+--------------------------------------------------
+-- CHARACTER
+--------------------------------------------------
+
+local function SetupCharacter(char)
+	Character = char
+	Humanoid = char:WaitForChild("Humanoid")
+	Root = char:WaitForChild("HumanoidRootPart")
+
+	Humanoid.WalkSpeed = Speed
+end
+
+if Player.Character then
+	SetupCharacter(Player.Character)
+end
+
+Player.CharacterAdded:Connect(function(char)
+	if Flying then
+		Flying = false
+	end
+
+	if FlyConnection then
+		FlyConnection:Disconnect()
+		FlyConnection = nil
+	end
+
+	task.wait(0.2)
+	SetupCharacter(char)
+
+	if FlyButton then
+		FlyButton.Text = "🪽 FLY: OFF"
+	end
+end)
+
+--------------------------------------------------
+-- GUI
+--------------------------------------------------
+
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "MarhoonSpeedAndFly"
+Gui.ResetOnSpawn = false
+Gui.Parent = PlayerGui
+
+--------------------------------------------------
+-- MAIN MENU
+--------------------------------------------------
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 290, 0, 310)
+Main.Position = UDim2.new(0.5, -145, 0.5, -155)
+Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Main.BorderSizePixel = 0
+Main.Parent = Gui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0,12)
+MainCorner.Parent = Main
+
+--------------------------------------------------
+-- TITLE
+--------------------------------------------------
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1,0,0,45)
+Title.BackgroundTransparency = 1
+Title.Text = "marhoon speed and fly ❤️✨"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.TextSize = 18
+Title.Font = Enum.Font.GothamBold
+Title.Parent = Main
+
+--------------------------------------------------
+-- SPEED
+--------------------------------------------------
+
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Position = UDim2.new(0,15,0,50)
+SpeedLabel.Size = UDim2.new(1,-30,0,30)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Text = "⚡ Speed: "..Speed
+SpeedLabel.TextColor3 = Color3.new(1,1,1)
+SpeedLabel.TextSize = 16
+SpeedLabel.Font = Enum.Font.Gotham
+SpeedLabel.Parent = Main
+
+local SpeedBox = Instance.new("TextBox")
+SpeedBox.Position = UDim2.new(0,15,0,82)
+SpeedBox.Size = UDim2.new(1,-30,0,38)
+SpeedBox.BackgroundColor3 = Color3.fromRGB(45,45,45)
+SpeedBox.TextColor3 = Color3.new(1,1,1)
+SpeedBox.PlaceholderText = "Speed 1 - 200"
+SpeedBox.Text = tostring(Speed)
+SpeedBox.TextSize = 15
+SpeedBox.Font = Enum.Font.Gotham
+SpeedBox.ClearTextOnFocus = false
+SpeedBox.Parent = Main
+
+local SpeedCorner = Instance.new("UICorner")
+SpeedCorner.CornerRadius = UDim.new(0,8)
+SpeedCorner.Parent = SpeedBox
+
+SpeedBox.FocusLost:Connect(function()
+	local value = tonumber(SpeedBox.Text)
+
+	if value then
+		Speed = math.clamp(math.floor(value),1,200)
+		SpeedBox.Text = tostring(Speed)
+		SpeedLabel.Text = "⚡ Speed: "..Speed
+
+		if Humanoid and not Flying then
+			Humanoid.WalkSpeed = Speed
+		end
+	end
+end)
+
+--------------------------------------------------
+-- FLY SPEED
+--------------------------------------------------
+
+local FlyLabel = Instance.new("TextLabel")
+FlyLabel.Position = UDim2.new(0,15,0,125)
+FlyLabel.Size = UDim2.new(1,-30,0,30)
+FlyLabel.BackgroundTransparency = 1
+FlyLabel.Text = "🪽 Fly Speed: "..FlySpeed
+FlyLabel.TextColor3 = Color3.new(1,1,1)
+FlyLabel.TextSize = 16
+FlyLabel.Font = Enum.Font.Gotham
+FlyLabel.Parent = Main
+
+local FlyBox = Instance.new("TextBox")
+FlyBox.Position = UDim2.new(0,15,0,157)
+FlyBox.Size = UDim2.new(1,-30,0,38)
+FlyBox.BackgroundColor3 = Color3.fromRGB(45,45,45)
+FlyBox.TextColor3 = Color3.new(1,1,1)
+FlyBox.PlaceholderText = "Fly Speed 1 - 200"
+FlyBox.Text = tostring(FlySpeed)
+FlyBox.TextSize = 15
+FlyBox.Font = Enum.Font.Gotham
+FlyBox.ClearTextOnFocus = false
+FlyBox.Parent = Main
+
+local FlyCorner = Instance.new("UICorner")
+FlyCorner.CornerRadius = UDim.new(0,8)
+FlyCorner.Parent = FlyBox
+
+FlyBox.FocusLost:Connect(function()
+	local value = tonumber(FlyBox.Text)
+
+	if value then
+		FlySpeed = math.clamp(math.floor(value),1,200)
+		FlyBox.Text = tostring(FlySpeed)
+		FlyLabel.Text = "🪽 Fly Speed: "..FlySpeed
+	end
+end)
+
+--------------------------------------------------
+-- FLY BUTTON
+--------------------------------------------------
+
+FlyButton = Instance.new("TextButton")
+FlyButton.Position = UDim2.new(0,15,0,205)
+FlyButton.Size = UDim2.new(0.48,-5,0,42)
+FlyButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+FlyButton.TextColor3 = Color3.new(1,1,1)
+FlyButton.Text = "🪽 FLY: OFF"
+FlyButton.TextSize = 15
+FlyButton.Font = Enum.Font.GothamBold
+FlyButton.Parent = Main
+
+local FlyButtonCorner = Instance.new("UICorner")
+FlyButtonCorner.CornerRadius = UDim.new(0,8)
+FlyButtonCorner.Parent = FlyButton
+
+--------------------------------------------------
+-- CLOSE BUTTON
+--------------------------------------------------
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Position = UDim2.new(0.52,5,0,205)
+CloseButton.Size = UDim2.new(0.48,-20,0,42)
+CloseButton.BackgroundColor3 = Color3.fromRGB(70,40,40)
+CloseButton.TextColor3 = Color3.new(1,1,1)
+CloseButton.Text = "✕ Đóng"
+CloseButton.TextSize = 15
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = Main
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0,8)
+CloseCorner.Parent = CloseButton
+
+--------------------------------------------------
+-- OPEN BUTTON
+--------------------------------------------------
+
+local OpenButton = Instance.new("TextButton")
+OpenButton.Size = UDim2.new(0,110,0,42)
+OpenButton.Position = UDim2.new(0,15,0.5,-21)
+OpenButton.BackgroundColor3 = Color3.fromRGB(25,25,25)
+OpenButton.TextColor3 = Color3.new(1,1,1)
+OpenButton.Text = "MARHOON ❤️"
+OpenButton.TextSize = 14
+OpenButton.Font = Enum.Font.GothamBold
+OpenButton.Visible = false
+OpenButton.Parent = Gui
+
+local OpenCorner = Instance.new("UICorner")
+OpenCorner.CornerRadius = UDim.new(0,10)
+OpenCorner.Parent = OpenButton
+
+--------------------------------------------------
+-- MOBILE UP/DOWN BUTTONS
+--------------------------------------------------
+
+local UpButton = Instance.new("TextButton")
+UpButton.Name = "FlyUp"
+UpButton.Size = UDim2.new(0,65,0,65)
+UpButton.Position = UDim2.new(1,-145,1,-190)
+UpButton.BackgroundColor3 = Color3.fromRGB(35,35,35)
+UpButton.Text = "⬆️"
+UpButton.TextSize = 28
+UpButton.TextColor3 = Color3.new(1,1,1)
+UpButton.Visible = false
+UpButton.Parent = Gui
+
+local UpCorner = Instance.new("UICorner")
+UpCorner.CornerRadius = UDim.new(1,0)
+UpCorner.Parent = UpButton
+
+local DownButton = Instance.new("TextButton")
+DownButton.Name = "FlyDown"
+DownButton.Size = UDim2.new(0,65,0,65)
+DownButton.Position = UDim2.new(1,-75,1,-190)
+DownButton.BackgroundColor3 = Color3.fromRGB(35,35,35)
+DownButton.Text = "⬇️"
+DownButton.TextSize = 28
+DownButton.TextColor3 = Color3.new(1,1,1)
+DownButton.Visible = false
+DownButton.Parent = Gui
+
+local DownCorner = Instance.new("UICorner")
+DownCorner.CornerRadius = UDim.new(1,0)
+DownCorner.Parent = DownButton
+
+--------------------------------------------------
+-- BUTTON HOLD SYSTEM
+--------------------------------------------------
+
+local function HoldButton(button, callback)
+	button.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch
+			or input.UserInputType == Enum.UserInputType.MouseButton1 then
+
+			callback(true)
+		end
+	end)
+
+	button.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch
+			or input.UserInputType == Enum.UserInputType.MouseButton1 then
+
+			callback(false)
+		end
+	end)
+end
+
+HoldButton(UpButton,function(state)
+	UpPressed = state
+end)
+
+HoldButton(DownButton,function(state)
+	DownPressed = state
+end)
+
+--------------------------------------------------
+-- START FLY
+--------------------------------------------------
+
+local function StartFly()
+
+	if Flying then
+		return
+	end
+
+	if not Character or not Humanoid or not Root then
+		return
+	end
+
+	Flying = true
+
+	FlyButton.Text = "🪽 FLY: ON"
+
+	UpButton.Visible = true
+	DownButton.Visible = true
+
+	Humanoid.AutoRotate = false
+
+	FlyConnection = RunService.RenderStepped:Connect(function()
+
+		if not Flying then
+			return
+		end
+
+		if not Character.Parent or not Root.Parent then
+			return
+		end
+
+		local Camera = workspace.CurrentCamera
+
+		-- Joystick Roblox
+		local MoveDirection = Humanoid.MoveDirection
+
+		local Horizontal = Vector3.new(
+			MoveDirection.X,
+			0,
+			MoveDirection.Z
+		)
+
+		-- Lên / xuống
+		local Vertical = 0
+
+		if UpPressed then
+			Vertical += 1
+		end
+
+		if DownPressed then
+			Vertical -= 1
+		end
+
+		local Movement = Horizontal
+
+		if Movement.Magnitude > 1 then
+			Movement = Movement.Unit
+		end
+
+		Movement = Movement * FlySpeed
+		Movement += Vector3.new(0,Vertical * FlySpeed,0)
+
+		Root.AssemblyLinearVelocity = Movement
+
+		-- Xoay nhân vật theo hướng camera
+		local Look = Camera.CFrame.LookVector
+
+		local FlatLook = Vector3.new(
+			Look.X,
+			0,
+			Look.Z
+		)
+
+		if FlatLook.Magnitude > 0.01 then
+			Root.CFrame = CFrame.lookAt(
+				Root.Position,
+				Root.Position + FlatLook.Unit
+			)
+		end
+
+	end)
+end
+
+--------------------------------------------------
+-- STOP FLY
+--------------------------------------------------
+
+local function StopFly()
+
+	Flying = false
+
+	UpPressed = false
+	DownPressed = false
+
+	if FlyConnection then
+		FlyConnection:Disconnect()
+		FlyConnection = nil
+	end
+
+	if Humanoid then
+		Humanoid.AutoRotate = true
+		Humanoid.WalkSpeed = Speed
+	end
+
+	if Root then
+		Root.AssemblyLinearVelocity = Vector3.zero
+	end
+
+	UpButton.Visible = false
+	DownButton.Visible = false
+
+	FlyButton.Text = "🪽 FLY: OFF"
+end
+
+--------------------------------------------------
+-- FLY TOGGLE
+--------------------------------------------------
+
+FlyButton.MouseButton1Click:Connect(function()
+
+	if Flying then
+		StopFly()
+	else
+		StartFly()
+	end
+
+end)
+
+--------------------------------------------------
+-- MENU
+--------------------------------------------------
+
+CloseButton.MouseButton1Click:Connect(function()
+	Main.Visible = false
+	OpenButton.Visible = true
+end)
+
+OpenButton.MouseButton1Click:Connect(function()
+	Main.Visible = true
+	OpenButton.Visible = false
+end)
