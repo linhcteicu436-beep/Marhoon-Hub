@@ -1,0 +1,458 @@
+--// MARHOON SPEED AND FLY
+--// LocalScript
+--// Dùng trong Roblox Studio cho game của bạn
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+--==================================================
+-- SETTINGS
+--==================================================
+
+local SPEED = 1
+local FLY_SPEED = 1
+
+local speedEnabled = false
+local flyEnabled = false
+
+local character
+local humanoid
+local rootPart
+
+local attachment
+local linearVelocity
+local alignOrientation
+
+--==================================================
+-- CHARACTER
+--==================================================
+
+local function setupCharacter(char)
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
+	rootPart = char:WaitForChild("HumanoidRootPart")
+
+	if speedEnabled then
+		humanoid.WalkSpeed = SPEED
+	else
+		humanoid.WalkSpeed = 16
+	end
+end
+
+if player.Character then
+	setupCharacter(player.Character)
+end
+
+player.CharacterAdded:Connect(function(char)
+	if flyEnabled then
+		flyEnabled = false
+	end
+
+	setupCharacter(char)
+end)
+
+--==================================================
+-- GUI
+--==================================================
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "MarhoonSpeedAndFly"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- M BUTTON
+local openButton = Instance.new("TextButton")
+openButton.Size = UDim2.new(0,55,0,55)
+openButton.Position = UDim2.new(0,15,0.5,-25)
+openButton.Text = "M"
+openButton.TextSize = 24
+openButton.Font = Enum.Font.GothamBold
+openButton.TextColor3 = Color3.new(1,1,1)
+openButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
+openButton.Parent = gui
+
+local openCorner = Instance.new("UICorner")
+openCorner.CornerRadius = UDim.new(0,12)
+openCorner.Parent = openButton
+
+-- MENU
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,310,0,285)
+frame.Position = UDim2.new(0.5,-155,0.5,-142)
+frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+frame.Parent = gui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0,15)
+frameCorner.Parent = frame
+
+-- TITLE
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,45)
+title.BackgroundTransparency = 1
+title.Text = "MARHOON SPEED AND FLY"
+title.TextColor3 = Color3.new(1,1,1)
+title.TextSize = 18
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+
+-- CLOSE
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0,35,0,35)
+closeButton.Position = UDim2.new(1,-42,0,5)
+closeButton.Text = "X"
+closeButton.TextSize = 18
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextColor3 = Color3.new(1,1,1)
+closeButton.BackgroundColor3 = Color3.fromRGB(170,40,40)
+closeButton.Parent = frame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0,8)
+closeCorner.Parent = closeButton
+
+--==================================================
+-- BUTTON CREATOR
+--==================================================
+
+local function createButton(text,x,y)
+	local button = Instance.new("TextButton")
+
+	button.Size = UDim2.new(0,45,0,40)
+	button.Position = UDim2.new(0,x,0,y)
+
+	button.Text = text
+	button.TextSize = 20
+	button.Font = Enum.Font.GothamBold
+	button.TextColor3 = Color3.new(1,1,1)
+	button.BackgroundColor3 = Color3.fromRGB(60,60,60)
+
+	button.Parent = frame
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,8)
+	corner.Parent = button
+
+	return button
+end
+
+--==================================================
+-- SPEED
+--==================================================
+
+local speedMinus = createButton("-",20,60)
+local speedPlus = createButton("+",245,60)
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0,180,0,40)
+speedLabel.Position = UDim2.new(0,65,0,60)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "SPEED: 1"
+speedLabel.TextColor3 = Color3.new(1,1,1)
+speedLabel.TextSize = 18
+speedLabel.Font = Enum.Font.GothamBold
+speedLabel.Parent = frame
+
+--==================================================
+-- FLY
+--==================================================
+
+local flyMinus = createButton("-",20,115)
+local flyPlus = createButton("+",245,115)
+
+local flyLabel = Instance.new("TextLabel")
+flyLabel.Size = UDim2.new(0,180,0,40)
+flyLabel.Position = UDim2.new(0,65,0,115)
+flyLabel.BackgroundTransparency = 1
+flyLabel.Text = "FLY: 1"
+flyLabel.TextColor3 = Color3.new(1,1,1)
+flyLabel.TextSize = 18
+flyLabel.Font = Enum.Font.GothamBold
+flyLabel.Parent = frame
+
+--==================================================
+-- TOGGLE BUTTONS
+--==================================================
+
+local speedToggle = Instance.new("TextButton")
+speedToggle.Size = UDim2.new(0,250,0,40)
+speedToggle.Position = UDim2.new(0.5,-125,0,165)
+speedToggle.Text = "SPEED: OFF"
+speedToggle.TextSize = 17
+speedToggle.Font = Enum.Font.GothamBold
+speedToggle.TextColor3 = Color3.new(1,1,1)
+speedToggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
+speedToggle.Parent = frame
+
+local speedCorner = Instance.new("UICorner")
+speedCorner.CornerRadius = UDim.new(0,8)
+speedCorner.Parent = speedToggle
+
+local flyToggle = Instance.new("TextButton")
+flyToggle.Size = UDim2.new(0,250,0,40)
+flyToggle.Position = UDim2.new(0.5,-125,0,215)
+flyToggle.Text = "FLY: OFF"
+flyToggle.TextSize = 17
+flyToggle.Font = Enum.Font.GothamBold
+flyToggle.TextColor3 = Color3.new(1,1,1)
+flyToggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
+flyToggle.Parent = frame
+
+local flyCorner = Instance.new("UICorner")
+flyCorner.CornerRadius = UDim.new(0,8)
+flyCorner.Parent = flyToggle
+
+--==================================================
+-- SPEED CONTROL
+--==================================================
+
+local function updateSpeed()
+	speedLabel.Text = "SPEED: "..SPEED
+
+	if speedEnabled and humanoid then
+		humanoid.WalkSpeed = SPEED
+		speedToggle.Text = "SPEED: ON ("..SPEED..")"
+	end
+end
+
+speedMinus.MouseButton1Click:Connect(function()
+	SPEED = math.max(1,SPEED - 1)
+	updateSpeed()
+end)
+
+speedPlus.MouseButton1Click:Connect(function()
+	SPEED = math.min(200,SPEED + 1)
+	updateSpeed()
+end)
+
+speedToggle.MouseButton1Click:Connect(function()
+	speedEnabled = not speedEnabled
+
+	if speedEnabled then
+		humanoid.WalkSpeed = SPEED
+
+		speedToggle.Text = "SPEED: ON ("..SPEED..")"
+		speedToggle.BackgroundColor3 = Color3.fromRGB(40,150,70)
+	else
+		humanoid.WalkSpeed = 16
+
+		speedToggle.Text = "SPEED: OFF"
+		speedToggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
+	end
+end)
+
+--==================================================
+-- FLY SPEED
+--==================================================
+
+local function updateFlyText()
+	flyLabel.Text = "FLY: "..FLY_SPEED
+
+	if flyEnabled then
+		flyToggle.Text = "FLY: ON ("..FLY_SPEED..")"
+	end
+end
+
+flyMinus.MouseButton1Click:Connect(function()
+	FLY_SPEED = math.max(1,FLY_SPEED - 1)
+	updateFlyText()
+end)
+
+flyPlus.MouseButton1Click:Connect(function()
+	FLY_SPEED = math.min(200,FLY_SPEED + 1)
+	updateFlyText()
+end)
+
+--==================================================
+-- STOP FLY
+--==================================================
+
+local function stopFly()
+
+	flyEnabled = false
+
+	if linearVelocity then
+		linearVelocity:Destroy()
+		linearVelocity = nil
+	end
+
+	if alignOrientation then
+		alignOrientation:Destroy()
+		alignOrientation = nil
+	end
+
+	if attachment then
+		attachment:Destroy()
+		attachment = nil
+	end
+
+	if humanoid then
+		humanoid.PlatformStand = false
+		humanoid.AutoRotate = true
+	end
+
+	flyToggle.Text = "FLY: OFF"
+	flyToggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
+end
+
+--==================================================
+-- START FLY
+--==================================================
+
+local function startFly()
+
+	if not character or not humanoid or not rootPart then
+		return
+	end
+
+	-- Xóa hệ thống cũ nếu còn
+	stopFly()
+
+	flyEnabled = true
+
+	humanoid.PlatformStand = true
+	humanoid.AutoRotate = false
+
+	-- Attachment
+	attachment = Instance.new("Attachment")
+	attachment.Name = "MarhoonFlyAttachment"
+	attachment.Parent = rootPart
+
+	-- LinearVelocity
+	linearVelocity = Instance.new("LinearVelocity")
+	linearVelocity.Name = "MarhoonFlyVelocity"
+	linearVelocity.Attachment0 = attachment
+	linearVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
+	linearVelocity.MaxForce = math.huge
+	linearVelocity.VectorVelocity = Vector3.zero
+	linearVelocity.Parent = rootPart
+
+	-- AlignOrientation
+	alignOrientation = Instance.new("AlignOrientation")
+	alignOrientation.Name = "MarhoonFlyOrientation"
+	alignOrientation.Attachment0 = attachment
+	alignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
+	alignOrientation.MaxTorque = math.huge
+	alignOrientation.Responsiveness = 50
+	alignOrientation.Parent = rootPart
+
+	flyToggle.Text = "FLY: ON ("..FLY_SPEED..")"
+	flyToggle.BackgroundColor3 = Color3.fromRGB(40,150,70)
+end
+
+--==================================================
+-- FLY MOVEMENT
+--==================================================
+
+RunService.RenderStepped:Connect(function()
+
+	if not flyEnabled then
+		return
+	end
+
+	if not rootPart or not rootPart.Parent then
+		return
+	end
+
+	if not linearVelocity or not alignOrientation then
+		return
+	end
+
+	local camera = workspace.CurrentCamera
+
+	if not camera then
+		return
+	end
+
+	local direction = Vector3.zero
+
+	-- W
+	if UIS:IsKeyDown(Enum.KeyCode.W) then
+		direction += camera.CFrame.LookVector
+	end
+
+	-- S
+	if UIS:IsKeyDown(Enum.KeyCode.S) then
+		direction -= camera.CFrame.LookVector
+	end
+
+	-- A
+	if UIS:IsKeyDown(Enum.KeyCode.A) then
+		direction -= camera.CFrame.RightVector
+	end
+
+	-- D
+	if UIS:IsKeyDown(Enum.KeyCode.D) then
+		direction += camera.CFrame.RightVector
+	end
+
+	-- Space = lên
+	if UIS:IsKeyDown(Enum.KeyCode.Space) then
+		direction += Vector3.new(0,1,0)
+	end
+
+	-- Ctrl = xuống
+	if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+		direction -= Vector3.new(0,1,0)
+	end
+
+	if direction.Magnitude > 0 then
+		direction = direction.Unit
+	end
+
+	-- Áp dụng tốc độ bay
+	linearVelocity.VectorVelocity = direction * FLY_SPEED
+
+	-- Xoay nhân vật theo camera
+	local look = camera.CFrame.LookVector
+
+	alignOrientation.CFrame = CFrame.lookAt(
+		Vector3.zero,
+		Vector3.new(look.X,0,look.Z)
+	)
+end)
+
+--==================================================
+-- FLY BUTTON
+--==================================================
+
+flyToggle.MouseButton1Click:Connect(function()
+
+	if flyEnabled then
+		stopFly()
+	else
+		startFly()
+	end
+
+end)
+
+--==================================================
+-- OPEN / CLOSE
+--==================================================
+
+closeButton.MouseButton1Click:Connect(function()
+	frame.Visible = false
+	openButton.Visible = true
+end)
+
+openButton.MouseButton1Click:Connect(function()
+	frame.Visible = true
+	openButton.Visible = false
+end)
+
+-- Phím M
+UIS.InputBegan:Connect(function(input,processed)
+
+	if processed then
+		return
+	end
+
+	if input.KeyCode == Enum.KeyCode.M then
+		frame.Visible = not frame.Visible
+		openButton.Visible = not frame.Visible
+	end
+
+end)
