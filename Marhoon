@@ -1,0 +1,343 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- ĐỔI THÀNH USER ID CỦA BẠN
+local ADMIN_USER_ID = 123456789
+
+local remote = ReplicatedStorage:FindFirstChild("AdminRemote")
+
+if not remote then
+	remote = Instance.new("RemoteEvent")
+	remote.Name = "AdminRemote"
+	remote.Parent = ReplicatedStorage
+end
+
+local frozen = {}
+
+local function admin(player)
+	return player.UserId == ADMIN_USER_ID
+end
+
+local function findPlayer(name)
+	if typeof(name) ~= "string" then
+		return nil
+	end
+
+	name = name:lower():gsub("^%s+", ""):gsub("%s+$", "")
+
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p.Name:lower() == name then
+			return p
+		end
+	end
+
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p.DisplayName:lower() == name then
+			return p
+		end
+	end
+
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p.Name:lower():sub(1, #name) == name then
+			return p
+		end
+	end
+
+	return nil
+end
+
+local function getHumanoid(player)
+	local character = player.Character
+	return character and character:FindFirstChildOfClass("Humanoid")
+end
+
+local function getRoot(player)
+	local character = player.Character
+	return character and character:FindFirstChild("HumanoidRootPart")
+end
+
+remote.OnServerEvent:Connect(function(player, action, targetName, value)
+
+	-- QUAN TRỌNG: kiểm tra ở SERVER
+	if not admin(player) then
+		return
+	end
+
+	-- SPEED
+	if action == "Speed" then
+		local humanoid = getHumanoid(player)
+
+		if humanoid then
+			humanoid.WalkSpeed = math.clamp(
+				tonumber(value) or 16,
+				1,
+				200
+			)
+		end
+
+		return
+	end
+
+	local target = findPlayer(targetName)
+
+	-- DAMAGE
+	if action == "Damage" and target then
+		local humanoid = getHumanoid(target)
+
+		if humanoid and target ~= player then
+			humanoid:TakeDamage(
+				math.clamp(tonumber(value) or 10, 1, 100)
+			)
+		end
+
+		return
+	end
+
+	-- FREEZE
+	if action == "Freeze" and target then
+		local humanoid = getHumanoid(target)
+
+		if humanoid and target ~= player then
+			frozen[target] = true
+
+			humanoid.WalkSpeed = 0
+			humanoid.JumpPower = 0
+			humanoid.AutoRotate = false
+		end
+
+		return
+	end
+
+	-- UNFREEZE
+	if action == "Unfreeze" and target then
+		local humanoid = getHumanoid(target)
+
+		if humanoid then
+			frozen[target] = nil
+
+			humanoid.WalkSpeed = 16
+			humanoid.JumpPower = 50
+			humanoid.AutoRotate = true
+		end
+
+		return
+	end
+
+	-- GRAB
+	if action == "Grab" and target then
+		if target == player then
+			return
+		end
+
+		local adminRoot = getRoot(player)
+		local targetRoot = getRoot(target)
+
+		if adminRoot and targetRoot then
+			targetRoot.CFrame =
+				adminRoot.CFrame * CFrame.new(0, 0, -6)
+		end
+
+		return
+	end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	frozen[player] = nil
+end)
+                          local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+
+-- PHẢI GIỐNG SERVER
+local ADMIN_USER_ID = 123456789
+
+if player.UserId ~= ADMIN_USER_ID then
+	return
+end
+
+local remote = ReplicatedStorage:WaitForChild("AdminRemote")
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "MarhoonDivazAdmin"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- NÚT MỞ
+local open = Instance.new("TextButton")
+open.Size = UDim2.fromOffset(55, 55)
+open.Position = UDim2.fromOffset(15, 150)
+open.Text = "🦋"
+open.TextSize = 26
+open.BackgroundColor3 = Color3.fromRGB(40,40,55)
+open.TextColor3 = Color3.new(1,1,1)
+open.Parent = gui
+
+Instance.new("UICorner", open).CornerRadius =
+	UDim.new(1,0)
+
+-- MENU
+local menu = Instance.new("Frame")
+menu.Size = UDim2.fromOffset(340, 430)
+menu.Position = UDim2.new(0.5,-170,0.5,-215)
+menu.BackgroundColor3 = Color3.fromRGB(25,25,35)
+menu.Parent = gui
+
+Instance.new("UICorner", menu).CornerRadius =
+	UDim.new(0,15)
+
+-- TITLE
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,-50,0,50)
+title.Position = UDim2.fromOffset(10,5)
+title.BackgroundTransparency = 1
+title.Text = "🦋 Marhoon Divaz 🦋"
+title.TextSize = 21
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.new(1,1,1)
+title.Parent = menu
+
+-- CLOSE
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromOffset(40,40)
+close.Position = UDim2.new(1,-45,0,8)
+close.Text = "×"
+close.TextSize = 25
+close.BackgroundTransparency = 1
+close.TextColor3 = Color3.fromRGB(255,80,80)
+close.Parent = menu
+
+-- PLAYER
+local playerBox = Instance.new("TextBox")
+playerBox.Size = UDim2.new(1,-30,0,42)
+playerBox.Position = UDim2.fromOffset(15,60)
+playerBox.PlaceholderText = "👤 Username / DisplayName"
+playerBox.Text = ""
+playerBox.TextSize = 15
+playerBox.BackgroundColor3 = Color3.fromRGB(45,45,60)
+playerBox.TextColor3 = Color3.new(1,1,1)
+playerBox.Parent = menu
+
+Instance.new("UICorner", playerBox).CornerRadius =
+	UDim.new(0,8)
+
+-- VALUE
+local valueBox = Instance.new("TextBox")
+valueBox.Size = UDim2.new(1,-30,0,42)
+valueBox.Position = UDim2.fromOffset(15,112)
+valueBox.PlaceholderText = "Speed / Damage"
+valueBox.Text = "100"
+valueBox.TextSize = 15
+valueBox.BackgroundColor3 = Color3.fromRGB(45,45,60)
+valueBox.TextColor3 = Color3.new(1,1,1)
+valueBox.Parent = menu
+
+Instance.new("UICorner", valueBox).CornerRadius =
+	UDim.new(0,8)
+
+local function makeButton(text,x,y)
+	local b = Instance.new("TextButton")
+
+	b.Size = UDim2.fromOffset(150,42)
+	b.Position = UDim2.fromOffset(x,y)
+	b.Text = text
+	b.TextSize = 14
+	b.Font = Enum.Font.GothamBold
+	b.BackgroundColor3 = Color3.fromRGB(55,55,75)
+	b.TextColor3 = Color3.new(1,1,1)
+	b.Parent = menu
+
+	Instance.new("UICorner", b).CornerRadius =
+		UDim.new(0,8)
+
+	return b
+end
+
+local speed = makeButton("⚡ Speed",15,170)
+local damage = makeButton("🥊 Damage",175,170)
+
+local grab = makeButton("🧲 Grab",15,220)
+local freeze = makeButton("❄️ Freeze",175,220)
+
+local unfreeze = makeButton("🔓 Unfreeze",15,270)
+local reset = makeButton("↩ Reset Speed",175,270)
+
+local fastAttack = makeButton("⚡ Fast Attack",15,320)
+
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1,-30,0,35)
+status.Position = UDim2.fromOffset(15,370)
+status.BackgroundTransparency = 1
+status.Text = "🔐 ADMIN ONLINE"
+status.TextSize = 14
+status.TextColor3 = Color3.fromRGB(100,255,140)
+status.Parent = menu
+
+local function send(action,value)
+	remote:FireServer(
+		action,
+		playerBox.Text,
+		value
+	)
+end
+
+speed.MouseButton1Click:Connect(function()
+	local n = tonumber(valueBox.Text)
+
+	if not n then
+		status.Text = "⚠️ Nhập số 1 - 200"
+		return
+	end
+
+	n = math.clamp(n,1,200)
+
+	send("Speed",n)
+	status.Text = "⚡ Speed: "..n
+end)
+
+damage.MouseButton1Click:Connect(function()
+	send("Damage",tonumber(valueBox.Text) or 10)
+	status.Text = "🥊 Damage → "..playerBox.Text
+end)
+
+grab.MouseButton1Click:Connect(function()
+	send("Grab")
+	status.Text = "🧲 Grab → "..playerBox.Text
+end)
+
+freeze.MouseButton1Click:Connect(function()
+	send("Freeze")
+	status.Text = "❄️ Freeze → "..playerBox.Text
+end)
+
+unfreeze.MouseButton1Click:Connect(function()
+	send("Unfreeze")
+	status.Text = "🔓 Unfreeze → "..playerBox.Text
+end)
+
+reset.MouseButton1Click:Connect(function()
+	remote:FireServer("Speed","",16)
+	status.Text = "↩ Speed = 16"
+end)
+
+local fast = false
+
+fastAttack.MouseButton1Click:Connect(function()
+	fast = not fast
+
+	if fast then
+		fastAttack.Text = "⚡ Fast Attack: ON"
+		status.Text = "⚡ Fast Attack ON"
+	else
+		fastAttack.Text = "⚡ Fast Attack: OFF"
+		status.Text = "⚡ Fast Attack OFF"
+	end
+end)
+
+open.MouseButton1Click:Connect(function()
+	menu.Visible = not menu.Visible
+end)
+
+close.MouseButton1Click:Connect(function()
+	menu.Visible = false
+end)
